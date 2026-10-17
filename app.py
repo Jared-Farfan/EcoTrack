@@ -11,15 +11,18 @@ st.markdown(
     <style>
     .stApp { background-color: #f7f4ef; }
     h1, h2, h3 { color: #2f5d3a !important; font-weight: 650; }
-    .stButton > button {
-        background-color: #3f7d4e;
-        color: #fff;
-        border: none;
-        border-radius: 12px;
+    .stButton > button, button[kind="formSubmit"], div[data-testid="stForm"] button {
+        background-color: #3f7d4e !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 12px !important;
         padding: 0.5rem 1.4rem;
         font-weight: 600;
     }
-    .stButton > button:hover { background-color: #2f5d3a; color: #fff; }
+    .stButton > button:hover, button[kind="formSubmit"]:hover {
+        background-color: #2f5d3a !important;
+        color: #fff !important;
+    }
     div[data-testid="stMetricValue"] { color: #2f5d3a; }
     .block-container { padding-top: 2.4rem; padding-bottom: 3rem; max-width: 720px; }
     </style>
@@ -43,13 +46,15 @@ st.info(
     "con fines educativos, no una medición exacta."
 )
 
-text = st.text_area(
-    "¿Qué hiciste hoy?",
-    placeholder="Hoy comí carne y viajé 20km en bus",
-    height=110,
-)
+with st.form("daily_entry"):
+    text = st.text_area(
+        "¿Qué hiciste hoy?",
+        placeholder="Hoy comí carne y viajé 20km en bus",
+        height=110,
+    )
+    submitted = st.form_submit_button("Calcular huella")
 
-if st.button("Calcular huella"):
+if submitted:
     items = estimate(text)
     if not items:
         st.session_state.last_result = {"ok": False, "text": text}
@@ -83,14 +88,10 @@ if result is not None:
     else:
         st.metric("Huella estimada de hoy", f"{result['kg']:.2f} kg CO2e")
         st.caption("Desglose por actividad")
-        st.dataframe(result["rows"], hide_index=True, use_container_width=True)
+        st.table(result["rows"])
         st.caption("Recuerda: son valores aproximados para explorar hábitos, no para sentirte mal.")
 
 if st.session_state.history:
     st.subheader("Historial de esta sesión")
-    st.dataframe(
-        list(reversed(st.session_state.history)),
-        hide_index=True,
-        use_container_width=True,
-    )
+    st.table(list(reversed(st.session_state.history)))
     st.caption("El historial vive solo en esta sesión; si recargas la página, se reinicia.")
